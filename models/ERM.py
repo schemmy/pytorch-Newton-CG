@@ -14,12 +14,18 @@
 from torch.autograd import Variable
 import torch
 from .BasicModule import BasicModule
-# from ..data.prase_data import libSVM
-# from .data.prase_data import libSVM
 import sys
 import os
-sys.path.append(os.path.abspath('../data/'))
-from prase_data import libSVM
+
+
+
+def get_flat_params_from(parameters):
+    params = []
+    for para in parameters:
+        params.append(para.data.view(-1))
+
+    flat_params = torch.cat(params)
+    return flat_params
 
 class ERM(BasicModule):
 
@@ -27,12 +33,12 @@ class ERM(BasicModule):
         super(ERM, self).__init__()
         self.model_name = 'ERM'
 
-        self.linear = torch.nn.Linear(input_dim, num_classes, bias=0)
-        # self.linear.bias.data.zero_()
+        self.linear = torch.nn.Linear(input_dim, num_classes, bias=True)
+        self.linear.bias.data.zero_()
         self.linear.weight.data.zero_()
 
-        # self.params = [self.linear.weight, self.linear.bias]
-        self.params = [self.linear.weight]
+        self.params = [self.linear.weight, self.linear.bias]
+        # self.params = [self.linear.weight]
         # self.model = nn.Sequential()
         # self.model.add_module(
                     # "linear",
@@ -61,22 +67,16 @@ class ERM(BasicModule):
         g = torch.autograd.grad(out, self.params, create_graph=True, retain_graph=True)
         for i in range(len(g)):
             g[i].data.add_(self.lmd * self.params[i].data)
+        g = get_flat_params_from(g)
         return g
 
     def get_Hv(self, grad, v):
-        gv = 0
-        for g_para, v_para in zip(grad, v):
-            gv += (g_para * v_para).sum()
+        # gv = 0
+        # for g_para, v_para in zip(grad, v):
+            # gv += (g_para * v_para).sum()
+        gv = torch.dot(grad, v)
         hv = torch.autograd.grad(gv, self.params, retain_graph=True)
         for i in range(len(hv)):
             hv[i].data.add_(self.lmd * v[i].data)
         return hv
 
-if __name__ == '__main__':
-    a = libSVM()
-    inst = ERM(a.d, 2)
-    X = Variable(a.X, requires_grad=False)
-    y = Variable(a.y, requires_grad=False)
-
-    grad = inst.get_grad(X, y)
-    Ax = inst.get_Hv(grad, inst.params)

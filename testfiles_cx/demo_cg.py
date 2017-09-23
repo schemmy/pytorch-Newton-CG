@@ -11,11 +11,10 @@
 
 import sys
 import os
-sys.path.append(os.path.abspath('../data'))
-from dataset import Mnist
-from prase_data import libSVM
-sys.path.append(os.path.abspath('../models'))
-from ERM import ERM
+sys.path.append(os.path.abspath('..'))
+from data.dataset import Mnist
+from data.prase_data import libSVM
+from models.ERM import ERM
 
 import torch
 import numpy as np
