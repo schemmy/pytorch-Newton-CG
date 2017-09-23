@@ -13,7 +13,7 @@
 
 from torch.autograd import Variable
 import torch
-from BasicModule import BasicModule
+from .BasicModule import BasicModule
 # from ..data.prase_data import libSVM
 # from .data.prase_data import libSVM
 import sys
