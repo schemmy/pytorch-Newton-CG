@@ -67,14 +67,12 @@ class ERM(BasicModule):
         g = torch.autograd.grad(out, self.params, create_graph=True, retain_graph=True)
         for i in range(len(g)):
             g[i].data.add_(self.lmd * self.params[i].data)
-        g = get_flat_params_from(g)
         return g
 
     def get_Hv(self, grad, v):
-        # gv = 0
-        # for g_para, v_para in zip(grad, v):
-            # gv += (g_para * v_para).sum()
-        gv = torch.dot(grad, v)
+        gv = 0
+        for g_para, v_para in zip(grad, v):
+            gv += (g_para * v_para).sum()
         hv = torch.autograd.grad(gv, self.params, retain_graph=True)
         for i in range(len(hv)):
             hv[i].data.add_(self.lmd * v[i].data)
