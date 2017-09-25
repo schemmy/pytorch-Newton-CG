@@ -19,62 +19,81 @@ from models.ERM import ERM
 import torch
 import numpy as np
 from torch.autograd import Variable
+import time
+
+def CG(inst, grad):
+
+    x = [Variable(torch.zeros(para.size()) ) for para in inst.params]
+    Ax = inst.get_Hv(grad, x)
+
+    r = []
+    for para, b in zip(Ax, grad):
+        r.append(b - para)
 
 
+    p = [Variable(r_.data) for r_ in r]
+
+    r_norm = 0
+    for r_ in r:
+        r_norm += (r_ * r_).sum()
+    rTr = r_norm
+
+    iter_count = 0
+    while(1):
+        iter_count += 1
+
+        Ap = inst.get_Hv(grad, p)
+
+        pAp = 0
+        for p_, Ap_ in zip(p, Ap):
+            pAp += (p_ * Ap_).sum()
+        alpha = rTr/pAp
+
+        r_norm = 0.0
+        for x_, p_, r_, Ap_ in zip(x, p, r, Ap):
+            x_.data.add_(alpha.data * p_.data)
+            r_.data.add_(-alpha.data * Ap_.data)
+            r_norm += (r_ * r_).sum()
+
+        # print(r_norm.data.numpy())
+        # stupid if
+        if (r_norm < 1e-10).data.numpy() or iter_count >= 100:
+            # print (i)
+            break
+
+        rTr_new = r_norm
+
+        beta = rTr_new / rTr
+        rTr = rTr_new
+
+        for i in range(len(p)):
+            p[i].data = r[i].data + beta.data * p[i].data
+
+
+    return x, iter_count
 
 
 a = libSVM()
 inst = ERM(a.d, 2)
 X = Variable(a.X, requires_grad=False)
 y = Variable(a.y, requires_grad=False)
-grad = inst.get_grad(X, y)
 
-v = [Variable(para.data) for para in inst.params]
-Ax = inst.get_Hv(grad, v)
+start_time = time.time()
+for it in range(10):
+    grad = inst.get_grad(X, y)
+    x, iter_count = CG(inst, grad)
 
-r = []
-for para, b in zip(Ax, grad):
-    r.append(b - para)
+    for para, x_ in zip(inst.params, x):
+        para.data.add_(-1., x_.data)
 
-
-p = [Variable(r_.data) for r_ in r]
-
-r_norm = 0
-for r_ in zip(r):
-    r_norm += r_[0].norm()
-rTr = r_norm ** 2
-
-for i in range(10):
+    g_norm = 0
+    for grad_ in grad:
+        g_norm += grad_.norm() ** 2
+    g_norm = g_norm**(0.5)
+    print("-- %i CG iters, %f NOG --" %(iter_count, g_norm.data.numpy()[0]))
 
 
-    Ap = inst.get_Hv(grad, p)
-
-    pAp = 0
-    for p_, Ap_ in zip(p, Ap):
-        pAp += (p_ * Ap_).sum()
-    alpha = rTr/pAp
-
-    r_norm = 0.0
-    for para, p_, r_, Ap_ in zip(inst.params, p, r, Ap):
-        para.data.add_(alpha.data * p_.data)
-        r_.data.add_(-alpha.data * Ap_.data)
-        r_norm += r_.norm()
-
-    # stupid if
-    if (r_norm < 1e-4).data.numpy():
-        break
-
-    print(r_norm)
-    rTr_new = r_norm ** 2
-
-    beta = rTr_new / rTr
-    rTr = rTr_new
-
-    for i in range(len(p)):
-        p[i].data = r[i].data + beta.data * p[i].data
-
-
-
+print("--- %f seconds ---" % (time.time() - start_time))
 
 '''
 

@@ -17,16 +17,6 @@ from .BasicModule import BasicModule
 import sys
 import os
 
-
-
-def get_flat_params_from(parameters):
-    params = []
-    for para in parameters:
-        params.append(para.data.view(-1))
-
-    flat_params = torch.cat(params)
-    return flat_params
-
 class ERM(BasicModule):
 
     def __init__(self, input_dim, num_classes):
@@ -64,7 +54,7 @@ class ERM(BasicModule):
     def get_grad(self, x, y):
 
         out = self.get_loss(x, y)
-        g = torch.autograd.grad(out, self.params, create_graph=True, retain_graph=True)
+        g = torch.autograd.grad(out, self.params, create_graph=True)
         for i in range(len(g)):
             g[i].data.add_(self.lmd * self.params[i].data)
         return g
@@ -77,4 +67,3 @@ class ERM(BasicModule):
         for i in range(len(hv)):
             hv[i].data.add_(self.lmd * v[i].data)
         return hv
-

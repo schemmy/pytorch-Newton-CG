@@ -19,5 +19,9 @@
 from .Optimizer import Optimizer
 
 class SecondOrder(Optimizer):
-    def __init__(self):
+
+    def __init__(self, params, setting):
         super(SecondOrder, self).__init__()
+
+    def Newton(self, lr=1.):
+    	# step size is fixed to be 1.0

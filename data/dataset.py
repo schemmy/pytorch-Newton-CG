@@ -6,8 +6,8 @@
 
 #   @Create date:   2017-09-19 21:56:19
 
-#   @Last modified by:  Xi He
-#   @Last Modified time:    2017-09-19 23:18:02
+# @Last modified by:   Heerye
+# @Last modified time: 2017-09-23T17:20:39-04:00
 
 #   @Description:
 #   @Example:
@@ -42,6 +42,34 @@ class Mnist(data.Dataset):
                 root=root,
                 train=True,
                 transform=T.ToTensor(),
+                download=True
+            )
+            print("Loading Training Data ...")
+
+        self.imgs = imgs
+
+    def __len__(self):
+        return len(self.imgs)
+
+class Cifra10(data.Dataset):
+
+    def __init__(self, root, train=True):
+        '''
+        Process Cifra10 dataset
+        '''
+        if not train:
+            self.__name__ = 'Test'
+            imgs = torchvision.datasets.CIFAR10(
+                root=root,
+                train=False
+            )
+            print("Loading Testing Data ...")
+        else:
+            self.__name__ = 'Train'
+            imgs = torchvision.datasets.CIFAR10(
+                root=root,
+                train=True,
+                transform=T.ToTensor(),
                 download=False
             )
             print("Loading Training Data ...")
@@ -54,11 +82,12 @@ class Mnist(data.Dataset):
 
 if __name__ == '__main__':
     # MNIST dataset loading test
+    # root = './cifra10/'
     root = './mnist/'
-    mnist_test = Mnist(root, train=False)
-    print(mnist_test.imgs.test_data.size())
     mnist_train = Mnist(root, train=True)
     print(mnist_train.imgs.train_data.size())
+    mnist_test = Mnist(root, train=False)
+    print(mnist_test.imgs.test_data.size())
 
     import matplotlib.pyplot as plt
     idx = 12 # not too large
