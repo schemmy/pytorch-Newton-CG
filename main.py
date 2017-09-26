@@ -7,7 +7,7 @@
 #   @Create date:   2017-09-19 21:53:18
 
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-23T18:30:23-04:00
+# @Last modified time: 2017-09-25T13:51:14-04:00
 
 #   @Description:
 #   @Example:
@@ -46,10 +46,89 @@ def dataLoadingTest(**kwargs):
     print(train_data.imgs.train_data.size())
     print(test_data.imgs.test_data.size())
 
+def naive_train(**kwargs):
+    setting.parse(kwargs)
+    model = getattr(models, setting.model)()
+
+    if setting.load_model_path:
+        model.load(setting.load_model_path)
+    if setting.use_gpu:
+        model.cuda()
+
+    train_data = Mnist(setting.train_data_root, train=True)
+    test_data = Mnist(setting.train_data_root, train=False)
+
+    train_loader = DataLoader(
+        train_data.imgs, setting.batch_size, shuffle=True, num_workers=setting.num_workers)
+    # test_loader = DataLoader(test_data.imgs, setting.batch_size,
+                            #  shuffle=False, num_workers=setting.num_workers)
+
+    loss_fn = torch.nn.CrossEntropyLoss(size_average=True)
+
+    # TODO(xi): user define the optimizer in Optimizer class
+    # optimizer = torch.optim.Adam(
+    #     model.parameters(), lr=setting._lr, weight_decay=setting.weight_decay)
+    # optim = optimizer.FirstOrder(model.parameters(), setting=setting)
+
+    previous_loss = 1e100
+
+    loss_list = []
+    # jump_point = []
+
+    # batch_multiplier = 1
+    # jump_start = 0
+
+    optimizer = torch.optim.Adam(
+                    model.parameters(), lr=setting._lr, weight_decay=setting.weight_decay)
+    for iter in range(setting._max_iters):
+
+        # batch_multiplier = iter + 1
+
+        # subset_sampler = SubsetRandomSampler(indices=range(batch_multiplier * setting.batch_size))
+        # train_loader = DataLoader(train_data.imgs, setting.batch_size*setting.batch_size,
+                                    #   shuffle=False, sampler=subset_sampler, num_workers=4)
+        for batch_id, (data, label) in enumerate(train_loader):
+
+            input = Variable(data)
+            target = Variable(label)
+
+            if setting.use_gpu:
+                input = input.cuda()
+                target = target.cuda()
+
+            optimizer.zero_grad()
+            score = model(input)
+            loss = loss_fn(score, target)
+            loss.backward()
+            optimizer.step()
+
+            current_loss = loss.data[0]
+            loss_list.append(current_loss)
+
+            if batch_id == 500:
+                break
+
+            print('iter: %i, batch_id: %i, loss: %f' %(iter, batch_id, loss.data[0]))
+
+    # model.save()
+
+    import matplotlib.pyplot as plt
+    fig=plt.figure(1, figsize=(8, 4*(numpy.sqrt(5)-1)))
+    fig.subplots_adjust(bottom=0.1, left=0.12)
+    plt.style.use('fivethirtyeight')
+    plt.plot(loss_list, label='Adam')
+    plt.title("MNIST, Conv")
+    plt.xlabel("Iterations")
+    plt.ylabel("Batch Loss Value")
+    plt.legend()
+    # plt.show()
+    plt.savefig('ada_adam_naive.png')
+
 
 def train(**kwargs):
     setting.parse(kwargs)
     model = getattr(models, setting.model)()
+
     if setting.load_model_path:
         model.load(setting.load_model_path)
     if setting.use_gpu:
@@ -63,7 +142,7 @@ def train(**kwargs):
     test_loader = DataLoader(test_data.imgs, setting.batch_size,
                              shuffle=False, num_workers=setting.num_workers)
 
-    loss_fn = torch.nn.CrossEntropyLoss()
+    loss_fn = torch.nn.CrossEntropyLoss(size_average=True)
 
     # TODO(xi): user define the optimizer in Optimizer class
     # optimizer = torch.optim.Adam(
@@ -82,10 +161,10 @@ def train(**kwargs):
         batch_multiplier = iter + 1
 
         subset_sampler = SubsetRandomSampler(indices=range(batch_multiplier * setting.batch_size))
-        train_loader = DataLoader(train_data.imgs, setting.batch_size * batch_multiplier,
+        train_loader = DataLoader(train_data.imgs, setting.batch_size*setting.batch_size,
                                       shuffle=False, sampler=subset_sampler, num_workers=4)
         optimizer = torch.optim.Adam(
-                model.parameters(), lr=setting._lr/batch_multiplier, weight_decay=setting.weight_decay)
+                model.parameters(), lr=setting._lr/setting.batch_size, weight_decay=setting.weight_decay)
 
         tag = True
         while True:
@@ -133,7 +212,7 @@ def train(**kwargs):
     plt.ylabel("Batch Loss Value")
     plt.legend()
     # plt.show()
-    plt.savefig('ada_adam.png')
+    plt.savefig('ada_adam_1.png')
 
 
 def write_csv(results, file_name):

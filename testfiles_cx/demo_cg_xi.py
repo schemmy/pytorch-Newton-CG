@@ -4,7 +4,7 @@
 # @Email: 			   machx9@gmail.com
 # @Date:               2017-09-21 20:43:33
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-24T21:38:57-04:00
+# @Last modified time: 2017-09-25T14:02:44-04:00
 
 ##################
 
@@ -22,6 +22,8 @@ from torch.autograd import Variable
 import time
 
 def CG(inst, grad):
+
+    inst.params = inst.get_params()
 
     x = [Variable(torch.zeros(para.size()) ) for para in inst.params]
     Ax = inst.get_Hv(grad, x)
@@ -57,7 +59,7 @@ def CG(inst, grad):
 
         # print(r_norm.data.numpy())
         # stupid if
-        if (r_norm < 1e-10).data.numpy() or iter_count >= 100:
+        if (r_norm < 1e-10).data.numpy() or iter_count >= 10:
             # print (i)
             break
 

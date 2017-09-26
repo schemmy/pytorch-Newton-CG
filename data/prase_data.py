@@ -18,7 +18,7 @@
 
 
 import os
-import urllib.request
+import urllib
 import numpy as np
 import torch
 from scipy.sparse import csr_matrix, vstack
@@ -41,7 +41,7 @@ class libSVM():
         if not os.path.exists(file_path):
             link_name = 'https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/%s' % (
                 name)
-            urllib.request.urlretrieve(link_name, file_path)
+            urllib.urlretrieve(link_name, file_path)
 
         self.load_csr(file_path)
 

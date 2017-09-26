@@ -6,8 +6,8 @@
 
 #   @Create date:   2017-09-20 00:03:09
 
-#   @Last modified by:  Xi He
-#   @Last Modified time:    2017-09-20 00:05:59
+# @Last modified by:   Heerye
+# @Last modified time: 2017-09-25T13:33:32-04:00
 
 #   @Description:
 #   @Example:
@@ -23,5 +23,6 @@ class SecondOrder(Optimizer):
     def __init__(self, params, setting):
         super(SecondOrder, self).__init__()
 
-    def Newton(self, lr=1.):
+    def NewtonCG(self, lr=1.):
+        pass
     	# step size is fixed to be 1.0

@@ -4,14 +4,15 @@ r = b - A*x;
 p = r;
 rTr = r'*r;
 
-for i = 1:1
+for i = 1:20
     pAp = p'*A*p;
-    A*p
+
     alpha = rTr / pAp;
     x = x + alpha * p;
     r = r - A * p * alpha;
     
-    rTr_new = r'*r
+    rTr_new = r'*r;
+    fprintf('%f\n', rTr_new);
     if rTr_new < 1e-8
         break
     end

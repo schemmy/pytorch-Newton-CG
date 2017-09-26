@@ -7,7 +7,7 @@
 #   @Create date:   2017-09-19 21:53:14
 
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-23T18:29:21-04:00
+# @Last modified time: 2017-09-25T13:50:07-04:00
 
 #   @Description:
 #   @Example:
@@ -29,14 +29,14 @@ class DefaultSettings(object):
 
     use_gpu = False
 
-    batch_size = 64
-    num_workers = 8
+    batch_size = 32
+    num_workers = 2
 
     max_epoch = 3
-    _max_iters = 10
+    _max_iters = 1
     _lr = 0.005
     _mom = 0.9
-    weight_decay = 1e-4
+    weight_decay = 0.0
     num_classes = 10
 
     print_freq = 20

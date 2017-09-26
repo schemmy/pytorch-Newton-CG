@@ -6,8 +6,8 @@
 
 #   @Create date:   2017-09-19 23:32:11
 
-#   @Last modified by:  Xi He
-#   @Last Modified time:    2017-09-19 23:51:13
+# @Last modified by:   Heerye
+# @Last modified time: 2017-09-24T17:18:36-04:00
 
 #   @Description:
 #   @Example:
@@ -36,6 +36,35 @@ class BasicModule(torch.nn.Module):
         torch.save(self.state_dict(), name)
         return name
 
+    # def forward(self, x):
+    #     pass
+    #
+    # def loss(self, out, y):
+    #     pass
+    #
+    # def get_loss(self, x, y, lmd):
+    #
+    #     out = self.forward(x)
+    #     loss = self.loss(out, y)
+    #
+    #     return loss
+
+    # def get_grad(self, x, y):
+    #
+    #     out = self.get_loss(x, y)
+    #     g = torch.autograd.grad(out, self.params, create_graph=True)
+    #     for i in range(len(g)):
+    #         g[i].data.add_(self.lmd * self.params[i].data)
+    #     return g
+    #
+    # def get_Hv(self, grad, v):
+    #     gv = 0
+    #     for g_para, v_para in zip(grad, v):
+    #         gv += (g_para * v_para).sum()
+    #     hv = torch.autograd.grad(gv, self.params, retain_graph=True)
+    #     for i in range(len(hv)):
+    #         hv[i].data.add_(self.lmd * v[i].data)
+    #     return hv
 
 # class Flat(torch.nn.Module):
 
