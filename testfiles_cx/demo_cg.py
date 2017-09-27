@@ -4,7 +4,7 @@
 # @Email: 			   machx9@gmail.com
 # @Date:               2017-09-21 20:43:33
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-24T21:38:57-04:00
+# @Last modified time: 2017-09-26T17:08:00-04:00
 
 ##################
 
@@ -79,22 +79,44 @@ if __name__ == '__main__':
     X = Variable(a.X, requires_grad=False)
     y = Variable(a.y, requires_grad=False)
 
+    ####### First-order methods ##########
     start_time = time.time()
-    for it in range(10):
-        grad = inst.get_grad(X, y)
-        x, iter_count = CG(inst, grad)
+    for it in range(20):
 
-        for para, x_ in zip(inst.params, x):
-            para.data.add_(-1., x_.data)
+        grad = inst.get_grad(X, y)
+
+        lr = 0.1
+        for para, x_ in zip(inst.params, grad):
+            para.data.add_(-lr, x_.data)
 
         g_norm = 0
         for grad_ in grad:
             g_norm += grad_.norm() ** 2
         g_norm = g_norm**(0.5)
-        print("-- %i CG iters, %f NOG --" %(iter_count, g_norm.data.numpy()[0]))
+
+        print("-- %i iters, %f NOG --" %(it, g_norm.data.numpy()[0]))
 
 
     print("--- %f seconds ---" % (time.time() - start_time))
+
+
+    ######## Newton CG methods ##########
+    # start_time = time.time()
+    # for it in range(10):
+    #     grad = inst.get_grad(X, y)
+    #     x, iter_count = CG(inst, grad)
+    #
+    #     for para, x_ in zip(inst.params, x):
+    #         para.data.add_(-1., x_.data)
+    #
+    #     g_norm = 0
+    #     for grad_ in grad:
+    #         g_norm += grad_.norm() ** 2
+    #     g_norm = g_norm**(0.5)
+    #     print("-- %i CG iters, %f NOG --" %(iter_count, g_norm.data.numpy()[0]))
+    #
+    #
+    # print("--- %f seconds ---" % (time.time() - start_time))
 
     '''
 

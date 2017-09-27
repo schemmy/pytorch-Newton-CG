@@ -4,7 +4,7 @@
 # @Email: 			   machx9@gmail.com
 # @Date:               2017-09-21 20:43:33
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-25T14:02:44-04:00
+# @Last modified time: 2017-09-26T17:39:27-04:00
 
 ##################
 
@@ -49,6 +49,14 @@ def CG(inst, grad):
         pAp = 0
         for p_, Ap_ in zip(p, Ap):
             pAp += (p_ * Ap_).sum()
+
+        if pAp.data[0] <= 0.0:
+            if iter_count == 1:
+                for x_, g_ in zip(x, grad):
+                    x_.data.add_(-g_.data)
+            break
+        # print("cg_iter: %d, pAp: %.4f"%(iter_count, pAp.data[0]))
+
         alpha = rTr/pAp
 
         r_norm = 0.0
@@ -59,7 +67,7 @@ def CG(inst, grad):
 
         # print(r_norm.data.numpy())
         # stupid if
-        if (r_norm < 1e-10).data.numpy() or iter_count >= 10:
+        if (r_norm < 1e-10).data.numpy() or iter_count >= 5:
             # print (i)
             break
 

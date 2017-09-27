@@ -7,7 +7,7 @@
 #   @Create date:   2017-09-19 23:32:11
 
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-25T16:25:00-04:00
+# @Last modified time: 2017-09-26T18:01:48-04:00
 
 #   @Description:
 #   @Example:
@@ -25,6 +25,7 @@ except:
 from torch.autograd import gradcheck
 
 torch.manual_seed(123)
+
 
 class NaiveCNet(BasicModule):
     """Naive convolutional neural network for MNIST dataset classification."""
@@ -67,12 +68,11 @@ class NaiveCNet(BasicModule):
 
     def forward(self, x):
         """Forward."""
-        # print("in forward: %.4f"%x.data.sum())
         x = self.features(x)
-        # x = x.view(x.size(0), -1)
-        # x = self.classifier(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
         # x = self.softmax(x)
-        # print("in forward: %.4f"%x.data.sum())
+        # print("execute forward in forward function!!")
 
         return x
 
@@ -81,6 +81,8 @@ class NaiveCNet(BasicModule):
         fx = self.forward(x)
         loss = self.get_lossfn()(fx, y)
 
+        # print("execute forward in get_loss function!!")
+
         return loss
 
     def get_grad(self, x, y):
@@ -88,6 +90,7 @@ class NaiveCNet(BasicModule):
         params = self.get_params()
         loss = self.get_loss(x, y)
         g = torch.autograd.grad(loss, params, create_graph=True)
+        # print("execute forward in get_grad function!!")
         # for i in range(len(g)):
         #     g[i].data.add_(self.lmd * params[i].data)
         return g
@@ -99,7 +102,7 @@ class NaiveCNet(BasicModule):
         gv = 0.0
         for g_para, v_para in zip(grad, v):
             gv += (g_para * v_para).sum()
-        hv = torch.autograd.grad(gv, params, retain_graph=True)
+        hv = torch.autograd.grad(gv, params, create_graph=True)
 
         # for i in range(len(hv)):
         #     hv[i].data.add_(self.lmd * v[i].data)
@@ -128,6 +131,41 @@ class NaiveCNet(BasicModule):
               (eps, (loss_y.data[0] - loss_y.data[0]) - eps * g.data[0]))
 
 
+def line_search(lr, net, direction, X, y, grad):
+
+    w = []
+    for para in net.get_params():
+        w.append(para.clone())
+
+    f0 = net.get_loss(X, y)
+    f_new = f0+1.
+
+    gd = 0.0
+    for g, d in zip(grad, direction):
+        gd += (g * d).sum()
+
+    if gd.data[0] <= 0.0:
+        lr = -lr
+
+    ls_it = 0
+    max_ls = 5
+    while (f_new >= f0).data[0] and ls_it < max_ls:
+
+        for para, w_, d_ in zip(net.get_params(), w, direction):
+            para.data = w_.data.add(-lr, d_.data)
+
+        f_new = net.get_loss(X, y)
+        lr *=0.9
+        ls_it += 1
+
+    if ls_it == max_ls:
+        for para, w_, g in zip(net.get_params(), w, grad):
+            para.data = w_.data.add(-0.01, g.data)
+
+        # print (f_new.data[0], f0.data[0])
+
+    return f_new, lr, ls_it
+
 if __name__ == '__main__':
     import sys
     import os
@@ -136,8 +174,9 @@ if __name__ == '__main__':
 
     from settings import setting
     from data.dataset import Mnist
-    model = getattr(models, setting.model)()
-    net = NaiveCNet()
+
+    setting.model = "NaiveCNet"
+    net = getattr(models, setting.model)()
 
     setting.train_data_root = "../data/mnist/"
 
@@ -158,8 +197,6 @@ if __name__ == '__main__':
     test_y = test_data.imgs.test_labels[:2000]
 
     loss_fn = net.get_lossfn()
-
-    # print(net.__call__)
 
     ######################################## TEST 1 #########
     # for iter, (data, label) in enumerate(train_loader):
@@ -189,60 +226,101 @@ if __name__ == '__main__':
     #     break
 
     # ######################################## TEST 2 #########
-    optimizer = torch.optim.Adam(
-        model.parameters(), lr=setting._lr, weight_decay=setting.weight_decay)
+    # optimizer = torch.optim.Adam(
+    #     net.parameters(), lr=setting._lr, weight_decay=setting.weight_decay)
     #
-    import time
-    start = time.time()
-    for iter, (data, label) in enumerate(train_loader):
-
-        input = Variable(data)
-        target = Variable(label)
-
-        print(input.sum())
-
-        optimizer.zero_grad()
-        # TODO(xi): figure out what's the difference between model(input), model.forward(input)
-        out = model(input)
-        # out = net.forward(input)
-        # out = net.features(input)
-
-
-        print(out.sum())
-
-        break
-    #
-    #     # TODO(xi): figure out what's the difference between net.get_lossfn()(out, target) and net.get_loss(input, target)
-    #     # loss = net.get_lossfn()(out, target)
-    #     # loss = net.get_loss(input, target)
-    #     # loss.backward()
-    #     # optimizer.step()
-    #     #
-    #     # if iter % setting.print_freq == 0:
-    #     #     test_output = model(test_x)
-    #     #     pred_y = torch.max(test_output, 1)[1].data.squeeze()
-    #     #     accuracy = sum(pred_y == test_y) / float(test_y.size(0))
-    #     #
-    #     #     print("iter: %d, loss: %.4f, accuracy: %.4f, time: %.4f" %
-    #     #           (iter, loss.data[0], accuracy, time.time() - start))
-
-    ####################################### TEST 3 #########
-    # from testfiles_cx.demo_cg_xi import CG
     # import time
-    # start_time = time.time()
+    # start = time.time()
     # for iter, (data, label) in enumerate(train_loader):
+    #
     #     input = Variable(data)
     #     target = Variable(label)
-    #     grad = net.get_grad(input, target)
-    #     x, iter_count = CG(net, grad)
     #
-    #     for para, x_ in zip(net.get_params(), x):
-    #         # print(para.size(), x_.size())
-    #         para.data.add_(-1., x_.data)
+    #     optimizer.zero_grad()
     #
-    #     g_norm = 0.0
-    #     for grad_ in grad:
-    #         g_norm += grad_.norm()**2
-    #     g_norm = g_norm**(0.5)
-    #     print("-- %i CG iters, %f NOG --" %(iter_count, g_norm.data.numpy()[0]))
-    #     # break
+    #     # out = net.forward(input)
+    #
+    #     loss = net.get_loss(input, target)
+    #     loss.backward()
+    #     optimizer.step()
+    #
+    #     if iter % setting.print_freq == 0:
+    #         test_output = net(test_x)
+    #         pred_y = torch.max(test_output, 1)[1].data.squeeze()
+    #         accuracy = sum(pred_y == test_y) / float(test_y.size(0))
+    #
+    #         print("iter: %d, loss: %.4f, accuracy: %.4f, time: %.4f" %
+    #               (iter, loss.data[0], accuracy, time.time() - start))
+
+
+    ####################################### TEST 3 #########
+    from testfiles_cx.demo_cg_xi import CG
+    import time
+    start_time = time.time()
+    lst_nog, lst_loss, lst_acc = [], [], []
+    for iter, (data, label) in enumerate(train_loader):
+        X = Variable(data)
+        y = Variable(label)
+
+        ##########  first-order methods ############
+        # grad = net.get_grad(X, y)
+        # lr = 0.1
+        # for para, g in zip(net.get_params(), grad):
+        #     para.data.add_(-lr * g.data)
+        #
+        #
+        # if iter % setting.print_freq == 1:
+        #     g_norm = 0.0
+        #     for grad_ in grad:
+        #         g_norm += grad_.norm()**2
+        #     g_norm = g_norm**(0.5)
+        #
+        #     loss = net.get_loss(X, y)
+        #     # print("get loss")
+        #
+        #     test_output = net(test_x)
+        #     # print("get test output")
+        #     pred_y = torch.max(test_output, 1)[1].data.squeeze()
+        #     accuracy = sum(pred_y == test_y) / float(test_y.size(0))
+        #
+        #     print("-- %i iters, %f NOG, %f loss, %.4f acc --" \
+        #             %(iter, g_norm.data.numpy()[0], loss.data[0], accuracy))
+        #
+        # # break
+
+        for i in range(50):
+            grad = net.get_grad(X, y)
+
+            direction, iter_count = CG(net, grad)
+
+            lr = 1.0
+            loss, lr, ls_it = line_search(lr, net, direction, X, y, grad)
+
+            g_norm = 0.0
+            for grad_ in grad:
+                g_norm += grad_.norm()**2
+            g_norm = g_norm**(0.5)
+
+            test_output = net(test_x)
+            pred_y = torch.max(test_output, 1)[1].data.squeeze()
+            accuracy = sum(pred_y == test_y) / float(test_y.size(0))
+
+            lst_nog.append(g_norm.data.numpy()[0])
+            lst_loss.append(loss.data[0])
+            lst_acc.append(accuracy)
+            print("-- %i CG iters, %f NOG, %f loss, %i ls, %.4f acc --" \
+                    %(iter_count, g_norm.data.numpy()[0], loss.data[0], ls_it, accuracy))
+
+    import matplotlib.pyplot as plt
+    fig=plt.figure(1, figsize=(8, 4*(numpy.sqrt(5)-1)))
+    fig.subplots_adjust(bottom=0.1, left=0.12)
+    plt.style.use('fivethirtyeight')
+    plt.plot(lst_loss, label='loss')
+    plt.plot(lst_nog, label='NOG')
+    plt.plot(lst_acc, label='Acc')
+    plt.title("MNIST, Conv")
+    plt.xlabel("Iterations")
+    plt.ylabel("Batch Loss Value")
+    plt.legend()
+    # plt.show()
+    plt.savefig('naive_newton_cg.png')

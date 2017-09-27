@@ -7,7 +7,7 @@
 #   @Create date:   2017-09-19 23:29:33
 
 # @Last modified by:   Heerye
-# @Last modified time: 2017-09-22T10:43:33-04:00
+# @Last modified time: 2017-09-26T09:02:07-04:00
 
 #   @Description:
 #   @Example:
@@ -18,5 +18,6 @@
 
 from .AlexNet import AlexNet
 from .NaiveCNet import NaiveCNet
+# from .forexample import NaiveCNet
 from .ERM import ERM
 from .BasicModule import BasicModule
